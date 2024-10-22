@@ -134,7 +134,14 @@ func main() {
 	})
 
 	e.POST("/", func(c echo.Context) error {
+		header := c.Request().Header
+		token := header.Get("X-Form-Token")
+		FORM_TOKEN := os.Getenv("FORM_TOKEN")
+		if token != FORM_TOKEN {
+			return c.String(http.StatusUnauthorized, "unauthorized")
+		}
 		data, _ := io.ReadAll(c.Request().Body)
+
 		_, _, err = api.PostMessage("C0577Q3MSG3", slack.MsgOptionBlocks(
 			slack.NewSectionBlock(
 				slack.NewTextBlockObject("mrkdwn", string(data), false, true),

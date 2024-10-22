@@ -124,7 +124,7 @@ func main() {
 					}
 				}
 				if interaction.Type == slack.InteractionTypeBlockActions {
-					log.Printf("Block actions: %#v", interaction)
+					// log.Printf("Block actions: %#v", interaction)
 					sectionBlock := interaction.Message.Msg.Blocks.BlockSet[0].(*slack.SectionBlock)
 					err = api.OpenDialog(interaction.TriggerID, slack.Dialog{
 						TriggerID:   interaction.TriggerID,
@@ -172,7 +172,7 @@ func main() {
 		data, _ := io.ReadAll(c.Request().Body)
 		_, _, err = api.PostMessage("C0577Q3MSG3", slack.MsgOptionBlocks(
 			slack.NewSectionBlock(
-				slack.NewTextBlockObject("plain_text", string(data), false, false),
+				slack.NewTextBlockObject("mrkdwn", string(data), false, false),
 				nil,
 				nil,
 			),

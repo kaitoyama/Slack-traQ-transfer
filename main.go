@@ -17,13 +17,10 @@ import (
 var bot *traqwsbot.Bot
 
 func main() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("This is production environment. Please set environment variables.")
-	}
+	godotenv.Load()
 	TARGET_CHANNEL := os.Getenv("TARGET_CHANNEL")
 	TRAQ_ACCESS_TOKEN := os.Getenv("TRAQ_BOT_ACCESS_TOKEN")
-	bot, err = traqwsbot.NewBot(&traqwsbot.Options{
+	bot, err := traqwsbot.NewBot(&traqwsbot.Options{
 		AccessToken: TRAQ_ACCESS_TOKEN,
 	})
 	if err != nil {

@@ -14,7 +14,6 @@ import (
 	"github.com/slack-go/slack/socketmode"
 	"github.com/traPtitech/go-traq"
 	traqwsbot "github.com/traPtitech/traq-ws-bot"
-	"github.com/traPtitech/traq-ws-bot/event"
 	"github.com/traPtitech/traq-ws-bot/payload"
 )
 
@@ -120,12 +119,11 @@ func main() {
 	}()
 
 	bot.OnBotMessageStampsUpdated(func(e *payload.BotMessageStampsUpdated) {
-		err=bot.API().MessageApi.DeleteMessage(context.Background(), e.MessageID).Execute()
+		_, err = bot.API().MessageApi.DeleteMessage(context.Background(), e.MessageID).Execute()
 		if err != nil {
 			log.Printf("failed deleting message: %v", err)
 		}
 	})
-	}
 
 	go func() {
 		if err := bot.Start(); err != nil {

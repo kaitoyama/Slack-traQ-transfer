@@ -189,5 +189,6 @@ func main() {
 	if err := http.ListenAndServe(":80", nil); err != nil {
 		log.Fatal(err)
 	}
+	log.Print("Server is running on :80")
 
 }

@@ -133,7 +133,7 @@ func main() {
 		return c.String(http.StatusOK, "pong")
 	})
 
-	e.POST("/", func(c echo.Context) error {
+	e.POST("/inbox", func(c echo.Context) error {
 		header := c.Request().Header
 		token := header.Get("X-Form-Token")
 		FORM_TOKEN := os.Getenv("FORM_TOKEN")
@@ -143,6 +143,31 @@ func main() {
 		data, _ := io.ReadAll(c.Request().Body)
 
 		_, _, err = api.PostMessage("C07T00ZK4KD", slack.MsgOptionBlocks(
+			slack.NewSectionBlock(
+				slack.NewTextBlockObject("mrkdwn", string(data), false, true),
+				nil,
+				nil,
+			),
+			slack.NewActionBlock("button",
+				slack.NewButtonBlockElement("test", "Click Me", slack.NewTextBlockObject("plain_text", "traQへ転送", false, false)),
+			),
+		))
+		if err != nil {
+			log.Printf("failed posting message: %v", err)
+		}
+		return c.String(http.StatusOK, "ok")
+	})
+
+	e.POST("/accounts", func(c echo.Context) error {
+		header := c.Request().Header
+		token := header.Get("X-Form-Token")
+		FORM_TOKEN := os.Getenv("FORM_TOKEN")
+		if token != FORM_TOKEN {
+			return c.String(http.StatusUnauthorized, "unauthorized")
+		}
+		data, _ := io.ReadAll(c.Request().Body)
+
+		_, _, err = api.PostMessage("C07T2KD5MJQ", slack.MsgOptionBlocks(
 			slack.NewSectionBlock(
 				slack.NewTextBlockObject("mrkdwn", string(data), false, true),
 				nil,

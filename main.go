@@ -142,7 +142,7 @@ func main() {
 		}
 		data, _ := io.ReadAll(c.Request().Body)
 
-		_, _, err = api.PostMessage("C0577Q3MSG3", slack.MsgOptionBlocks(
+		_, _, err = api.PostMessage("C07T00ZK4KD", slack.MsgOptionBlocks(
 			slack.NewSectionBlock(
 				slack.NewTextBlockObject("mrkdwn", string(data), false, true),
 				nil,

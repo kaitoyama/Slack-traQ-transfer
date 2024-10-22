@@ -151,9 +151,11 @@ func main() {
 	}()
 	socket.Run()
 
-	if err := bot.Start(); err != nil {
-		log.Fatal(err)
-	}
+	go func() {
+		if err := bot.Start(); err != nil {
+			log.Fatal(err)
+		}
+	}()
 
 	http.HandleFunc("/ping", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)

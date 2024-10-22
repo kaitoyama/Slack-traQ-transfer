@@ -3,7 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
+	"io"
 	"log"
+	"net/http"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -150,6 +152,39 @@ func main() {
 	socket.Run()
 
 	if err := bot.Start(); err != nil {
+		log.Fatal(err)
+	}
+
+	http.HandleFunc("/ping", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("pong"))
+	})
+
+	// サーバーが受信したhttpsのpostRequestを処理する
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		data, _ := io.ReadAll(r.Body)
+		_, _, err = api.PostMessage("C0577Q3MSG3", slack.MsgOptionBlocks(
+			slack.NewSectionBlock(
+				slack.NewTextBlockObject("plain_text", string(data), false, false),
+				nil,
+				nil,
+			),
+			slack.NewActionBlock("button",
+				slack.NewButtonBlockElement("test", "Click Me", slack.NewTextBlockObject("plain_text", "Click Me", false, false)),
+			),
+		))
+		if err != nil {
+			log.Printf("failed posting message: %v", err)
+		}
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("ok"))
+	})
+	// サーバーを起動する
+	if err := http.ListenAndServe(":3000", nil); err != nil {
 		log.Fatal(err)
 	}
 

@@ -119,9 +119,15 @@ func main() {
 	}()
 
 	bot.OnBotMessageStampsUpdated(func(e *payload.BotMessageStampsUpdated) {
-		_, err = bot.API().MessageApi.DeleteMessage(context.Background(), e.MessageID).Execute()
-		if err != nil {
-			log.Printf("failed deleting message: %v", err)
+		// e.Stamps[i].StampIDにyokunasasouがある場合、traqのメッセージを削除する
+		for _, stamp := range e.Stamps {
+			if stamp.StampID == "yokunasasou" {
+				_, err = bot.API().MessageApi.DeleteMessage(context.Background(), e.MessageID).Execute()
+				if err != nil {
+					log.Printf("failed deleting message: %v", err)
+				}
+				break
+			}
 		}
 	})
 

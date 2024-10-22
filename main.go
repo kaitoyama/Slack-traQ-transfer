@@ -9,6 +9,7 @@ import (
 	"os"
 
 	"github.com/joho/godotenv"
+	"github.com/labstack/echo/v4"
 	"github.com/slack-go/slack"
 	"github.com/slack-go/slack/slackevents"
 	"github.com/slack-go/slack/socketmode"
@@ -154,18 +155,14 @@ func main() {
 		log.Fatal(err)
 	}
 
-	http.HandleFunc("/ping", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("pong"))
+	e := echo.New()
+
+	e.GET("/ping", func(c echo.Context) error {
+		return c.String(http.StatusOK, "pong")
 	})
 
-	// サーバーが受信したhttpsのpostRequestを処理する
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost {
-			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
-			return
-		}
-		data, _ := io.ReadAll(r.Body)
+	e.POST("/", func(c echo.Context) error {
+		data, _ := io.ReadAll(c.Request().Body)
 		_, _, err = api.PostMessage("C0577Q3MSG3", slack.MsgOptionBlocks(
 			slack.NewSectionBlock(
 				slack.NewTextBlockObject("plain_text", string(data), false, false),
@@ -179,13 +176,8 @@ func main() {
 		if err != nil {
 			log.Printf("failed posting message: %v", err)
 		}
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("ok"))
+		return c.String(http.StatusOK, "ok")
 	})
-	// サーバーを起動する
-	if err := http.ListenAndServe(":80", nil); err != nil {
-		log.Fatal(err)
-	}
-	log.Print("Server is running on :80")
 
+	e.Logger.Fatal(e.Start(":80"))
 }

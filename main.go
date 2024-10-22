@@ -50,6 +50,7 @@ func main() {
 
 	go func() {
 		for envelope := range socket.Events {
+			// Slackソケットイベント処理
 			switch envelope.Type {
 			case socketmode.EventTypeEventsAPI:
 				socket.Ack(*envelope.Request)
@@ -150,10 +151,16 @@ func main() {
 			}
 		}
 	}()
-	socket.Run()
-	if err := bot.Start(); err != nil {
-		log.Fatal(err)
-	}
+
+	go func() {
+		if err := bot.Start(); err != nil {
+			log.Fatal(err)
+		}
+	}()
+
+	go func() {
+		socket.Run()
+	}()
 
 	e := echo.New()
 
@@ -179,5 +186,5 @@ func main() {
 		return c.String(http.StatusOK, "ok")
 	})
 
-	e.Logger.Fatal(e.Start(":80"))
+	e.Logger.Fatal(e.Start(":8080"))
 }

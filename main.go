@@ -11,7 +11,6 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/slack-go/slack"
-	"github.com/slack-go/slack/slackevents"
 	"github.com/slack-go/slack/socketmode"
 	"github.com/traPtitech/go-traq"
 	traqwsbot "github.com/traPtitech/traq-ws-bot"
@@ -52,39 +51,6 @@ func main() {
 		for envelope := range socket.Events {
 			// Slackソケットイベント処理
 			switch envelope.Type {
-			case socketmode.EventTypeEventsAPI:
-				socket.Ack(*envelope.Request)
-				eventPayload, _ := envelope.Data.(slackevents.EventsAPIEvent)
-				if eventPayload.Type == slackevents.CallbackEvent {
-					switch ev := eventPayload.InnerEvent.Data.(type) {
-					case *slackevents.ReactionAddedEvent:
-						// リアクションが追加されたとき
-						if ev.Reaction == "traq" {
-							_, err := api.GetConversationHistory(&slack.GetConversationHistoryParameters{
-								ChannelID: ev.Item.Channel,
-								Limit:     1,
-								Latest:    ev.Item.Timestamp,
-								Inclusive: true,
-							})
-							if err != nil {
-								log.Printf("failed getting conversation history: %v", err)
-							}
-							_, _, err = api.PostMessage(ev.Item.Channel, slack.MsgOptionBlocks(
-								slack.NewSectionBlock(
-									slack.NewTextBlockObject("plain_text", "Hello, world!", false, false),
-									nil,
-									nil,
-								),
-								slack.NewActionBlock("button",
-									slack.NewButtonBlockElement(ev.Item.Timestamp, "Click Me", slack.NewTextBlockObject("plain_text", "Click Me", false, false)),
-								),
-							))
-							if err != nil {
-								log.Printf("failed posting message: %v", err)
-							}
-						}
-					}
-				}
 			case socketmode.EventTypeInteractive:
 				interaction, ok := envelope.Data.(slack.InteractionCallback)
 				if !ok {
@@ -177,7 +143,7 @@ func main() {
 				nil,
 			),
 			slack.NewActionBlock("button",
-				slack.NewButtonBlockElement("test", "Click Me", slack.NewTextBlockObject("plain_text", "Click Me", false, false)),
+				slack.NewButtonBlockElement("test", "Click Me", slack.NewTextBlockObject("plain_text", "traQへ転送", false, false)),
 			),
 		))
 		if err != nil {

@@ -19,7 +19,7 @@ var bot *traqwsbot.Bot
 func main() {
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		log.Fatal("This is production environment. Please set environment variables.")
 	}
 	TARGET_CHANNEL := os.Getenv("TARGET_CHANNEL")
 	TRAQ_ACCESS_TOKEN := os.Getenv("TRAQ_BOT_ACCESS_TOKEN")
@@ -59,7 +59,6 @@ func main() {
 					case *slackevents.ReactionAddedEvent:
 						// リアクションが追加されたとき
 						if ev.Reaction == "traq" {
-							log.Printf("Reaction added: %v", ev)
 							_, err := api.GetConversationHistory(&slack.GetConversationHistoryParameters{
 								ChannelID: ev.Item.Channel,
 								Limit:     1,
@@ -70,6 +69,11 @@ func main() {
 								log.Printf("failed getting conversation history: %v", err)
 							}
 							_, _, err = api.PostMessage(ev.Item.Channel, slack.MsgOptionBlocks(
+								slack.NewSectionBlock(
+									slack.NewTextBlockObject("plain_text", "Hello, world!", false, false),
+									nil,
+									nil,
+								),
 								slack.NewActionBlock("button",
 									slack.NewButtonBlockElement(ev.Item.Timestamp, "Click Me", slack.NewTextBlockObject("plain_text", "Click Me", false, false)),
 								),
@@ -86,16 +90,8 @@ func main() {
 					continue
 				}
 				socket.Ack(*envelope.Request)
-				if interaction.Type == slack.InteractionTypeDialogSubmission {
-					// log.Printf("Dialog submission: %#v", interaction.Submission["text"])
-					_, _, err = bot.API().MessageApi.PostMessage(context.Background(), TARGET_CHANNEL).PostMessageRequest(traq.PostMessageRequest{
-						Content: fmt.Sprintf("渉外slackから転送です: %v", interaction.Submission["text"]),
-					}).Execute()
-					if err != nil {
-						log.Printf("failed posting message: %v", err)
-					}
-				}
-				if interaction.Type == slack.InteractionTypeBlockActions {
+				if interaction.Type == slack.InteractionTypeMessageAction {
+					sectionBlock := interaction.Message.Msg.Blocks.BlockSet[0].(*slack.SectionBlock)
 					err = api.OpenDialog(interaction.TriggerID, slack.Dialog{
 						TriggerID:   interaction.TriggerID,
 						CallbackID:  "dialog",
@@ -109,7 +105,40 @@ func main() {
 									Type:        slack.InputTypeTextArea,
 									Placeholder: "Text",
 								},
-								Value: "default text",
+								Value: sectionBlock.Text.Text,
+							},
+						},
+					})
+					if err != nil {
+						log.Printf("failed opening dialog: %v", err)
+					}
+
+				}
+				if interaction.Type == slack.InteractionTypeDialogSubmission {
+					_, _, err = bot.API().MessageApi.PostMessage(context.Background(), TARGET_CHANNEL).PostMessageRequest(traq.PostMessageRequest{
+						Content: fmt.Sprintf("渉外slackから転送です: \n%v", interaction.Submission["text"]),
+					}).Execute()
+					if err != nil {
+						log.Printf("failed posting message: %v", err)
+					}
+				}
+				if interaction.Type == slack.InteractionTypeBlockActions {
+					log.Printf("Block actions: %#v", interaction)
+					sectionBlock := interaction.Message.Msg.Blocks.BlockSet[0].(*slack.SectionBlock)
+					err = api.OpenDialog(interaction.TriggerID, slack.Dialog{
+						TriggerID:   interaction.TriggerID,
+						CallbackID:  "dialog",
+						Title:       "Dialog",
+						SubmitLabel: "Submit",
+						Elements: []slack.DialogElement{
+							slack.TextInputElement{
+								DialogInput: slack.DialogInput{
+									Label:       "Text",
+									Name:        "text",
+									Type:        slack.InputTypeTextArea,
+									Placeholder: "Text",
+								},
+								Value: sectionBlock.Text.Text,
 							},
 						},
 					})

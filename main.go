@@ -64,7 +64,6 @@ func main() {
 				}
 				socket.Ack(*envelope.Request)
 				if interaction.Type == slack.InteractionTypeMessageAction {
-					contentBlock := interaction.Message.Msg.Blocks.BlockSet[1].(*slack.SectionBlock)
 					err = api.OpenDialog(interaction.TriggerID, slack.Dialog{
 						TriggerID:   interaction.TriggerID,
 						CallbackID:  "dialog",
@@ -78,7 +77,7 @@ func main() {
 									Type:        slack.InputTypeTextArea,
 									Placeholder: "Text",
 								},
-								Value: contentBlock.Text.Text,
+								Value: interaction.Message.Text,
 							},
 						},
 					})

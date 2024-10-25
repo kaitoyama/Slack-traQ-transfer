@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"os"
@@ -18,6 +18,11 @@ import (
 )
 
 var bot *traqwsbot.Bot
+
+type Form struct {
+	PrivacyData string `json:"privacyData"`
+	Content     string `json:"content"`
+}
 
 func main() {
 	godotenv.Load()
@@ -59,6 +64,7 @@ func main() {
 				}
 				socket.Ack(*envelope.Request)
 				if interaction.Type == slack.InteractionTypeMessageAction {
+					contentBlock := interaction.Message.Msg.Blocks.BlockSet[1].(*slack.SectionBlock)
 					err = api.OpenDialog(interaction.TriggerID, slack.Dialog{
 						TriggerID:   interaction.TriggerID,
 						CallbackID:  "dialog",
@@ -72,7 +78,7 @@ func main() {
 									Type:        slack.InputTypeTextArea,
 									Placeholder: "Text",
 								},
-								Value: interaction.Message.Text,
+								Value: contentBlock.Text.Text,
 							},
 						},
 					})
@@ -91,7 +97,7 @@ func main() {
 				}
 				if interaction.Type == slack.InteractionTypeBlockActions {
 					// log.Printf("Block actions: %#v", interaction)
-					sectionBlock := interaction.Message.Msg.Blocks.BlockSet[0].(*slack.SectionBlock)
+					sectionBlock := interaction.Message.Msg.Blocks.BlockSet[1].(*slack.SectionBlock)
 					err = api.OpenDialog(interaction.TriggerID, slack.Dialog{
 						TriggerID:   interaction.TriggerID,
 						CallbackID:  "dialog",
@@ -154,11 +160,19 @@ func main() {
 		if token != FORM_TOKEN {
 			return c.String(http.StatusUnauthorized, "unauthorized")
 		}
-		data, _ := io.ReadAll(c.Request().Body)
+		var form Form
+		if err := json.NewDecoder(c.Request().Body).Decode(&form); err != nil {
+			return c.String(http.StatusBadRequest, "invalid request body")
+		}
 
 		_, _, err = api.PostMessage("C07T00ZK4KD", slack.MsgOptionBlocks(
 			slack.NewSectionBlock(
-				slack.NewTextBlockObject("mrkdwn", string(data), false, true),
+				slack.NewTextBlockObject("mrkdwn", string(form.PrivacyData), false, true),
+				nil,
+				nil,
+			),
+			slack.NewSectionBlock(
+				slack.NewTextBlockObject("mrkdwn", string(form.Content), false, true),
 				nil,
 				nil,
 			),
@@ -179,11 +193,19 @@ func main() {
 		if token != FORM_TOKEN {
 			return c.String(http.StatusUnauthorized, "unauthorized")
 		}
-		data, _ := io.ReadAll(c.Request().Body)
+		var form Form
+		if err := json.NewDecoder(c.Request().Body).Decode(&form); err != nil {
+			return c.String(http.StatusBadRequest, "invalid request body")
+		}
 
-		_, _, err = api.PostMessage("C07T2KD5MJQ", slack.MsgOptionBlocks(
+		_, _, err = api.PostMessage("C07T00ZK4KD", slack.MsgOptionBlocks(
 			slack.NewSectionBlock(
-				slack.NewTextBlockObject("mrkdwn", string(data), false, true),
+				slack.NewTextBlockObject("mrkdwn", string(form.PrivacyData), false, true),
+				nil,
+				nil,
+			),
+			slack.NewSectionBlock(
+				slack.NewTextBlockObject("mrkdwn", string(form.Content), false, true),
 				nil,
 				nil,
 			),

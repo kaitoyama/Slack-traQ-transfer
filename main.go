@@ -197,7 +197,7 @@ func main() {
 			return c.String(http.StatusBadRequest, "invalid request body")
 		}
 
-		_, _, err = api.PostMessage("C07T00ZK4KD", slack.MsgOptionBlocks(
+		_, _, err = api.PostMessage("C07T2KD5MJQ", slack.MsgOptionBlocks(
 			slack.NewSectionBlock(
 				slack.NewTextBlockObject("mrkdwn", string(form.PrivacyData), false, true),
 				nil,

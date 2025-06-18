@@ -88,7 +88,7 @@ func main() {
 				}
 				if interaction.Type == slack.InteractionTypeDialogSubmission {
 					_, _, err = bot.API().MessageApi.PostMessage(context.Background(), TARGET_CHANNEL).PostMessageRequest(traq.PostMessageRequest{
-						Content: fmt.Sprintf("渉外slackから転送です: \n%v", interaction.Submission["text"]),
+						Content: fmt.Sprintf("渉外slack[%vチャンネル]から転送です: \n%v", interaction.Channel.GroupConversation.Name, interaction.Submission["text"]),
 					}).Execute()
 					if err != nil {
 						log.Printf("failed posting message: %v", err)
